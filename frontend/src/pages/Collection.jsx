@@ -3,9 +3,11 @@ import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const Collection = () => {
-  const { products,search,showSearch } = useContext(ShopContext);
+  const { products, search, showSearch, loading, setLoading } = useContext(ShopContext);
   const [showFilter, setShowFilter] = useState(false);
   const [filterProduct, setFilterProduct] = useState([]);
   const [category, setCategory] = useState([]);
@@ -31,8 +33,10 @@ const Collection = () => {
   const applyFilter = () => {
     let productsCopy = products.slice();
 
-    if(showSearch && search){
-      productsCopy = productsCopy.filter(item =>item.name.toLowerCase().includes(search.toLowerCase()))
+    if (showSearch && search) {
+      productsCopy = productsCopy.filter((item) =>
+        item.name.toLowerCase().includes(search.toLowerCase())
+      );
     }
 
     if (category.length > 0) {
@@ -47,9 +51,7 @@ const Collection = () => {
       );
     }
 
-    // Reset sortType to relevant whenever a filter is applied
     setSortType("relevant");
-
     setFilterProduct(productsCopy);
   };
 
@@ -73,8 +75,14 @@ const Collection = () => {
   };
 
   useEffect(() => {
-    applyFilter();
-  }, [category, subCategory,search,showSearch]);
+    setLoading(true);
+    const timer = setTimeout(() => {
+      applyFilter();
+      setLoading(false);
+    }, 1000); 
+
+    return () => clearTimeout(timer);
+  }, [category, subCategory, search, showSearch, setLoading]);
 
   useEffect(() => {
     sortProduct();
@@ -82,7 +90,7 @@ const Collection = () => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
-      {/* Filter*/}
+      {/* Filter */}
       <div className="min-w-60">
         <p
           onClick={() => setShowFilter(!showFilter)}
@@ -95,7 +103,7 @@ const Collection = () => {
             alt=""
           />
         </p>
-        {/* category */}
+        {/* Category */}
         <div
           className={`border border-gray-300 pl-5 py-3 mt-6 ${
             showFilter ? "" : "hidden"
@@ -132,7 +140,7 @@ const Collection = () => {
             </p>
           </div>
         </div>
-        {/* sub category */}
+        {/* Sub-category */}
         <div
           className={`border border-gray-300 pl-5 py-5 my-5 ${
             showFilter ? "" : "hidden"
@@ -171,8 +179,7 @@ const Collection = () => {
         </div>
       </div>
 
-      {/* body of collection */}
-
+      {/* Body of collection */}
       <div className="flex-1">
         <div className="flex justify-between text-base sm:text-2xl mb-4">
           <Title text1={"ALL"} text2={"COLLECTIONS"} />
@@ -187,18 +194,24 @@ const Collection = () => {
             <option value="high to low">Sort by: High to Low</option>
           </select>
         </div>
-        {/* product mapping */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
-          {filterProduct.map((item, index) => (
-            <ProductItem
-              key={index}
-              id={item._id}
-              name={item.name}
-              image={item.image}
-              price={item.price}
-            />
-          ))}
-        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-[100vh]">
+            <FontAwesomeIcon icon={faSpinner} spin size="3x" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
+            {filterProduct.map((item, index) => (
+              <ProductItem
+                key={index}
+                id={item._id}
+                name={item.name}
+                image={item.image}
+                price={item.price}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
